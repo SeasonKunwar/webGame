@@ -11,6 +11,8 @@ let direction=null
 let moveInterval=null
 let enemyInterval=null
 
+const MAX_LIVES=5
+
 const maze=[
 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
@@ -32,6 +34,7 @@ const maze=[
 let player={x:1,y:1}
 let enemies=[]
 let points=[]
+let apples=[]
 
 function createPoints(){
 points=[]
@@ -44,11 +47,24 @@ points.push({x,y})
 })
 }
 
+function createApples(){
+apples=[]
+let count=Math.max(1,level)
+
+while(apples.length<count){
+let pos=randomFree()
+
+if(!apples.some(a=>a.x===pos.x&&a.y===pos.y)){
+apples.push(pos)
+}
+}
+}
+
 function drawMaze(){
 game.innerHTML=""
 
-maze.forEach((row,y)=>{
-row.forEach((cell,x)=>{
+maze.forEach((row)=>{
+row.forEach((cell)=>{
 const div=document.createElement("div")
 if(cell===1)div.classList.add("wall")
 game.appendChild(div)
@@ -57,11 +73,12 @@ game.appendChild(div)
 
 points.forEach(p=>{
 const index=p.y*15+p.x
-const point=document.createElement("div")
-point.classList.add("point")
-game.children[index].appendChild(point)
+const el=document.createElement("div")
+el.classList.add("point")
+game.children[index].appendChild(el)
 })
 
+drawApples()
 drawPlayer()
 drawEnemies()
 }
@@ -69,6 +86,22 @@ drawEnemies()
 function drawPlayer(){
 const index=player.y*15+player.x
 game.children[index].id="player"
+}
+
+function drawEnemies(){
+enemies.forEach(e=>{
+const index=e.y*15+e.x
+game.children[index].classList.add("enemy")
+})
+}
+
+function drawApples(){
+apples.forEach(a=>{
+const index=a.y*15+a.x
+const el=document.createElement("div")
+el.classList.add("apple")
+game.children[index].appendChild(el)
+})
 }
 
 function createLives(){
@@ -105,6 +138,17 @@ return false
 return true
 })
 
+apples=apples.filter(a=>{
+if(a.x===player.x&&a.y===player.y){
+if(lives<MAX_LIVES){
+lives++
+createLives()
+}
+return false
+}
+return true
+})
+
 drawMaze()
 checkEnemyCollision()
 checkWin()
@@ -124,13 +168,6 @@ enemies=[]
 for(let i=0;i<count;i++){
 enemies.push(randomFree())
 }
-}
-
-function drawEnemies(){
-enemies.forEach(e=>{
-const index=e.y*15+e.x
-game.children[index].classList.add("enemy")
-})
 }
 
 function moveEnemies(){
@@ -160,24 +197,20 @@ break
 function hitPlayer(){
 lives--
 createLives()
-
 direction=null
-
-const p=document.getElementById("player")
-p.classList.add("hit")
 
 setTimeout(()=>{
 if(lives<=0){
 gameOver()
 }else{
+player={x:1,y:1}
 drawMaze()
 }
-},1500)
+},800)
 }
 
 function checkWin(){
 if(points.length===0){
-saveScore()
 nextLevel()
 }
 }
@@ -186,27 +219,8 @@ function nextLevel(){
 level++
 createPoints()
 createEnemies(level)
+createApples()
 drawMaze()
-}
-
-function saveScore(){
-const name=prompt("Enter name")
-const data=JSON.parse(localStorage.getItem("scores"))||[]
-data.push({name,score})
-data.sort((a,b)=>b.score-a.score)
-localStorage.setItem("scores",JSON.stringify(data.slice(0,5)))
-showLeaderboard()
-}
-
-function showLeaderboard(){
-const board=document.querySelector(".leaderboard")
-const data=JSON.parse(localStorage.getItem("scores"))||[]
-board.innerHTML="<h3>Leaderboard</h3>"
-data.forEach(s=>{
-const p=document.createElement("p")
-p.textContent=`${s.name} - ${s.score}`
-board.appendChild(p)
-})
 }
 
 function gameOver(){
@@ -228,8 +242,8 @@ player={x:1,y:1}
 createLives()
 createPoints()
 createEnemies(1)
+createApples()
 drawMaze()
-showLeaderboard()
 
 moveInterval=setInterval(movePlayer,200)
 enemyInterval=setInterval(moveEnemies,400)
