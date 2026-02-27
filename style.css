@@ -5,6 +5,14 @@ background:#111;
 color:white;
 }
 
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+width:600px;
+margin:10px auto;
+}
+
 #game{
 margin:auto;
 display:grid;
@@ -13,37 +21,66 @@ grid-template-rows:repeat(15,40px);
 width:600px;
 }
 
+#game div{
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
 .wall{
 background:blue;
 }
 
 .point{
-background:white;
-border-radius:50%;
-width:10px;
-height:10px;
-margin:auto;
+width:80%;
+height:80%;
+background:url("img/cherry.png") center/contain no-repeat;
 }
 
 #player{
-background:red;
-border-radius:50%;
+width:80%;
+height:80%;
+background:url("img/player.png") center/contain no-repeat;
+}
+
+.apple{
+width:80%;
+height:80%;
+background:url("img/apple.png") center/contain no-repeat;
 }
 
 .enemy{
-background:green;
-border-radius:50%;
-}
-
-.dead{
-background:black;
+width:80%;
+height:80%;
+background:url("img/enemy.png") center/contain no-repeat;
 }
 
 .hit{
-background:orange;
+filter:brightness(1.5);
+}
+
+.controls{
+margin-top:15px;
 }
 
 .controls button{
 font-size:20px;
 margin:5px;
+padding:10px 15px;
+cursor:pointer;
+}
+
+button{
+padding:10px 20px;
+font-size:16px;
+cursor:pointer;
+}
+
+.lives span{
+font-size:22px;
+margin-left:5px;
+}
+
+.leaderboard{
+margin-top:20px;
 }
