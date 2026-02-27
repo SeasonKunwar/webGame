@@ -2,6 +2,7 @@ const game=document.getElementById("game")
 const startBtn=document.getElementById("startBtn")
 const scoreEl=document.getElementById("score")
 const livesEl=document.getElementById("lives")
+const leaderboardEl=document.querySelector(".leaderboard")
 
 let started=false
 let score=0
@@ -12,6 +13,8 @@ let moveInterval=null
 let enemyInterval=null
 
 const MAX_LIVES=5
+
+let leaderboard=[]
 
 const maze=[
 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -36,11 +39,45 @@ let enemies=[]
 let points=[]
 let apples=[]
 
+function loadLeaderboard(){
+const saved=localStorage.getItem("mazeLeaderboard")
+leaderboard=saved?JSON.parse(saved):[]
+}
+
+function saveLeaderboard(){
+localStorage.setItem("mazeLeaderboard",JSON.stringify(leaderboard))
+}
+
+function showLeaderboard(){
+leaderboardEl.innerHTML="<h2>Leaderboard</h2>"
+leaderboard
+.sort((a,b)=>b.score-a.score)
+.slice(0,10)
+.forEach((entry,i)=>{
+let medal=""
+if(i===0)medal="🥇 "
+else if(i===1)medal="🥈 "
+else if(i===2)medal="🥉 "
+const div=document.createElement("div")
+div.textContent=`${medal}${i+1}. ${entry.name} - ${entry.score}`
+leaderboardEl.appendChild(div)
+})
+leaderboardEl.style.display="block"
+}
+
+function submitScore(){
+let name=prompt("Game Over! Enter your name:")
+if(!name||name.trim()==="")name="Player"
+leaderboard.push({name:name,score:score})
+saveLeaderboard()
+showLeaderboard()
+}
+
 function createPoints(){
 points=[]
 maze.forEach((row,y)=>{
 row.forEach((cell,x)=>{
-if(cell===0 && !(x===1&&y===1)){
+if(cell===0&&!(x===1&&y===1)){
 points.push({x,y})
 }
 })
@@ -50,10 +87,8 @@ points.push({x,y})
 function createApples(){
 apples=[]
 let count=Math.max(1,level)
-
 while(apples.length<count){
 let pos=randomFree()
-
 if(!apples.some(a=>a.x===pos.x&&a.y===pos.y)){
 apples.push(pos)
 }
@@ -62,22 +97,19 @@ apples.push(pos)
 
 function drawMaze(){
 game.innerHTML=""
-
-maze.forEach((row)=>{
-row.forEach((cell)=>{
+maze.forEach(row=>{
+row.forEach(cell=>{
 const div=document.createElement("div")
 if(cell===1)div.classList.add("wall")
 game.appendChild(div)
 })
 })
-
 points.forEach(p=>{
 const index=p.y*15+p.x
 const el=document.createElement("div")
 el.classList.add("point")
 game.children[index].appendChild(el)
 })
-
 drawApples()
 drawPlayer()
 drawEnemies()
@@ -115,17 +147,13 @@ livesEl.appendChild(heart)
 
 function movePlayer(){
 if(!direction)return
-
 let nx=player.x
 let ny=player.y
-
 if(direction==="ArrowUp")ny--
 if(direction==="ArrowDown")ny++
 if(direction==="ArrowLeft")nx--
 if(direction==="ArrowRight")nx++
-
 if(maze[ny][nx]===1)return
-
 player.x=nx
 player.y=ny
 
@@ -198,7 +226,6 @@ function hitPlayer(){
 lives--
 createLives()
 direction=null
-
 setTimeout(()=>{
 if(lives<=0){
 gameOver()
@@ -226,25 +253,25 @@ drawMaze()
 function gameOver(){
 clearInterval(moveInterval)
 clearInterval(enemyInterval)
+submitScore()
 startBtn.style.display="block"
 startBtn.textContent="Restart?"
 started=false
 }
 
 startBtn.onclick=()=>{
+leaderboardEl.style.display="none"
 startBtn.style.display="none"
 started=true
 score=0
 level=1
 lives=3
 player={x:1,y:1}
-
 createLives()
 createPoints()
 createEnemies(1)
 createApples()
 drawMaze()
-
 moveInterval=setInterval(movePlayer,200)
 enemyInterval=setInterval(moveEnemies,400)
 }
@@ -260,3 +287,6 @@ if(!started)return
 direction=btn.dataset.dir
 }
 })
+
+loadLeaderboard()
+showLeaderboard()
